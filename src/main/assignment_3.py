@@ -1,138 +1,96 @@
 import numpy as np
-from decimal import Decimal
-                 #
 
-val = "010000000111111010111001"
-
-# val = "010000000011101110010001"
-
-double_bias = 1023
-
-
-q1_sign = int(val[0:1], 2)
-
-q1_exponent = int(val[1:12], 2)
-
-q1_mantissa = val[12:]
-
-
-q1_fraction = 0
-i = 0
-
-for digit in q1_mantissa:
-
-  i -= 1
-
-  if digit == '1':
-
-    q1_fraction += pow(2, i)
-
-q1_power = q1_exponent - double_bias
-
-q1_result = pow(-1, q1_sign) * pow(2, q1_power) * (1 + q1_fraction)
 # question 1
+def euler_method(f, t_range, num_steps, y0):
+  t0, tf = t_range
+  dt = (tf - t0) / num_steps
+  y = y0
+  for i in range(num_steps):
+    y = y + f(t0 + i*dt, y) * dt
+  return y
 
-print("{0:.4f}".format(q1_result))
+def dydt_1(t, y):
+  return t - y**2
+
+t_range = (0, 2)
+num_steps = 10
+y0 = 1
+
+y_final = euler_method(dydt_1, t_range, num_steps, y0)
+print(y_final)
 print()
-
 
 # question 2
+def runge_kutta(f, t_range, num_steps, y0):    
+  t0, tf = t_range
+  dt = (tf - t0) / num_steps
+  y = y0
+  
+  for i in range(num_steps):
+    k1 = f(t0 + i*dt, y)
+    k2 = f(t0 + i*dt + dt/2, y + (dt/2)*k1)
+    k3 = f(t0 + i*dt + dt/2, y + (dt/2)*k2)
+    k4 = f(t0 + i*dt + dt, y + dt*k3)
+    y = y + (dt/6) * (k1 + 2*k2 + 2*k3 + k4)
 
-q2_result = float(int(q1_result))
+  return y
 
-print("{0:.1f}".format(q2_result))
+def dydt_2(t, y):
+  return t - y**2
+
+t_range = (0, 2)
+num_steps = 10
+y0 = 1
+
+y_final = runge_kutta(dydt_2, t_range, num_steps, y0)
+print(y_final)
 print()
-
 
 # question 3
+def printMatrix(r1, r2, r3, width=6):
+  matrix = [r1, r2, r3]
+  for row in matrix:
+    row_str = " ".join([str(x).center(width) for x in row])
+    print(row_str)
+  print()
 
-q3_result = float(int(q1_result + 0.5))
+r1 = [2, -1, 1, 6]
+r2 = [1, 3, 1, 0]
+r3 = [-1, 5, 4, -3]
+# initial state
 
-print("{0:.1f}".format(q3_result))
-print()
+# 1/2 * r1 -> r1
+r1 = list(map(lambda x: x / 2, r1))
 
+# r2 - r1 -> r2
+for i in range(4):
+  r2[i] = r2[i] - r1[i]
 
-# question 4
+# r3 + r1 -> r3
+for i in range(4):
+  r3[i] = r3[i] + r1[i]
 
-abs_error = Decimal(abs((q1_result) - (q3_result)))
+# 2/7 * r2 -> r2
+r2 = list(map(lambda x: x * 2 / 7, r2))
 
+# r3 + (-9/2 * r2) -> r3
+for i in range(4):
+  r3[i] = r3[i] - 9/2 * r2[i]
 
-print(abs_error)
+# r1 + (1/2 * r2) -> r1
+for i in range(4):
+  r1[i] = r1[i] + 1/2 * r2[i]
 
-rel_error = (abs_error / abs(Decimal(q1_result)))
-print(rel_error)
-print()
+# 7/27 * r3
+r3 = list(map(lambda x: np.ceil(7/27 * x), r3))
 
+# r1 + (-4/7 * r3) -> r1
+for i in range(4):
+  r1[i] = r1[i] - 4/7 * r3[i]
 
-# question 5
+# r2 + (-1/7 * r3) -> r2
+for i in range(4):
+  r2[i] = r2[i] - 1/7 * r3[i]
 
-# 1/(n+1) ^ 3 < 10^-4
-
-# (n+1) ^ 3 > 10^4
-
-# n + 1 > 10^(4/3)
-
-# n > 10^(4/3) - 1
-
-print(int(pow(10, 4/3)))
-print()
-
-# question 6
-
-# Determine the number of iterations necessary to solve f(x) = x^3 + 4x^2 – 10 = 0 with
-
-# accuracy 10^-4 using a = 4 and b = 7
-
-# a: Bisection
-
-
-def f(x):
-  return pow(x,3) + 4 * pow(x, 2) - 10
-
-tol = pow(10, -4)
-left = -4
-right = 7
-
-max = 1000
-i = 0
-
-while (abs(right - left) > tol and i < max):
-  i += 1
-  p = (left + right) / 2
-  # print("at step " + str(i) + ", f(" + str(p) + ") = " + str(f(p)))
-  if (f(left) < 0 and f(p) > 0) or (f(left) > 0 and f(p) < 0):
-    right = p
-  else:
-    left = p
-print(i)
-
-print()
-
-# Determine the number of iterations necessary to solve f(x) = x^3 + 4x^2 – 10 = 0
-def fp(x):
-  return 3 * pow(x, 2) + 8 * x
-
-# b: Raphson
-
-# p_prev = (7+(-4))/2
-
-p_prev = -4
-p_next = 0
-
-i = 1
-while (i <= max):
-  if (fp(p_prev) != 0):
-    p_next = p_prev - f(p_prev) / fp(p_prev)
-    if (abs(p_next - p_prev) < tol):
-      print(i)
-      break
-    i += 1
-    p_prev = p_next
-  else:
-    break
-print()
-
-
-
-
-        
+question_3 = np.array([int(r1[3]), int(r2[3]), int(r3[3])])
+print(question_3)
